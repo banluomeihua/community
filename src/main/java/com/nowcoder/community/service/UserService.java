@@ -180,7 +180,7 @@ public class UserService implements CommunityConstant {
     }
 
     /**
-     * 推出账号
+     * 登出账号
      */
     public void logout(String ticket) {
         loginTicketMapper.updateStatus(ticket, 1);
@@ -195,4 +195,57 @@ public class UserService implements CommunityConstant {
     public LoginTicket findLoginTicket(String ticket) {
         return loginTicketMapper.selectByTicket(ticket);
     }
+
+    /**
+     * 更新头像
+     *
+     * @param userId
+     * @param headerUrl
+     * @return
+     */
+    public int updateHeader(int userId, String headerUrl) {
+        return userMapper.updateHeader(userId, headerUrl);
+    }
+
+    public User findUserByname(String username) {
+        return userMapper.selectByName(username);
+    }
+
+    /**
+     * 修改密码
+     *
+     * @param userId
+     * @param oldPassword
+     * @param newPassword
+     * @return
+     */
+    public Map<String, Object> updatePassword(int userId, String oldPassword, String newPassword) {
+        Map<String, Object> map = new HashMap<>();
+
+        // 空值处理
+        if (StringUtils.isBlank(oldPassword)) {
+            map.put("oldPasswordMsg", "原密码不能为空！");
+            return map;
+        }
+        if (StringUtils.isBlank(newPassword)) {
+            map.put("newPasswordMsg", "新密码不能为空！");
+            return map;
+        }
+
+        // 验证原始密码
+        User user = userMapper.selectById(userId);
+        oldPassword = CommunityUtil.md5(oldPassword + user.getSalt());
+        if(!user.getPassword().equals(oldPassword)) {
+            map.put("oldPasswordMsg", "原密码输入有误！");
+            return map;
+        }
+
+        // 更新密码
+        newPassword = CommunityUtil.md5(newPassword + user.getSalt());
+        userMapper.updatePassword(userId, newPassword);
+
+        return map;
+    }
+
+
 }
