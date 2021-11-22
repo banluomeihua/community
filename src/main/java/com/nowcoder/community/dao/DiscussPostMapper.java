@@ -15,6 +15,6 @@ public interface DiscussPostMapper {
     // 如果只有一个参数，并且在<if>里使用(动态)，那么就必须加别名即@Param
     int selectDiscussPostRows(@Param("userId") int userId);
 
-
+    int insertDiscussPost(DiscussPost discussPost);
 
 }
