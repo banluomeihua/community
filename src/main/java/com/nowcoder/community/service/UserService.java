@@ -207,7 +207,7 @@ public class UserService implements CommunityConstant {
         return userMapper.updateHeader(userId, headerUrl);
     }
 
-    public User findUserByname(String username) {
+    public User findUserByName(String username) {
         return userMapper.selectByName(username);
     }
 
@@ -246,6 +246,9 @@ public class UserService implements CommunityConstant {
 
         return map;
     }
+
+
+
 
 
 }
