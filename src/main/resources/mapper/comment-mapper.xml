@@ -29,6 +29,35 @@
           and entity_id = #{entityId}
     </select>
 
+    <select id="selectCommentById" resultType="com.nowcoder.community.entity.Comment">
+        select <include refid="selectFields"/>
+        from comment
+        where id = #{id}
+    </select>
+
+    <select id="selectCommentsByUser" resultType="com.nowcoder.community.entity.Comment">
+        select <include refid="selectFields"/>
+        from comment
+        where status != 1
+        and user_id = #{userId}
+        and entity_type = 1
+        and exists (
+        select id from discuss_post where id = comment.entity_id and status != 2
+        )
+        order by create_time desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="selectCountByUser" resultType="java.lang.Integer">
+        select count(id) from comment
+        where status != 1
+          and user_id = #{userId}
+          and entity_type = 1
+          and exists (
+                select id from discuss_post where id = comment.entity_id and status != 2
+            )
+    </select>
+
     <insert id="insertComment" parameterType="com.nowcoder.community.entity.Comment" keyProperty="id">
         insert into comment(<include refid="insertFields"></include>)
         values(#{userId},#{entityType},#{entityId},#{targetId},#{content},#{status},#{createTime})

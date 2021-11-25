@@ -80,7 +80,7 @@
 				
 				<!-- 关注列表 -->
 				<ul class="list-unstyled">
-					<li class="media pb-3 pt-3 mb-3 border-bottom position-relative" th:each="">
+					<li class="media pb-3 pt-3 mb-3 border-bottom position-relative" th:each="map:${users}">
 						<a th:href="@{|/user/profile/${map.user.id}|}">
 							<img th:src="${map.user.headerUrl}" class="mr-4 rounded-circle user-header" alt="用户头像" >
 						</a>
@@ -92,7 +92,7 @@
 								</span>
 							</h6>
 							<div>
-								input type="hidden" id="entityId" th:value="${map.user.id}">
+								<input type="hidden" id="entityId" th:value="${map.user.id}">
 								<button type="button" th:class="|btn ${map.hasFollowed?'btn-secondary':'btn-info'} btn-sm float-right follow-btn|"
 										th:if="${loginUser!=null && loginUser.id!=map.user.id}" th:text="${map.hasFollowed?'已关注':'关注TA'}">关注TA</button>
 							</div>
