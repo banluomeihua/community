@@ -6,6 +6,10 @@ import com.nowcoder.community.service.ElasticsearchService;
 import com.nowcoder.community.service.LikeService;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
+import org.apache.lucene.search.TotalHits;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -55,9 +59,13 @@ public class SearchController implements CommunityConstant {
         model.addAttribute("discussPosts", discussPosts);
         model.addAttribute("keyword", keyword);
 
+        // 数据的总数(用于计算总页数)
+        int rows = (int)elasticsearchService.getTotalHits(keyword, page.getOffset(), page.getLimit());
+
         // 分页信息
         page.setPath("/search?keyword=" + keyword);
-        page.setRows(searchResult == null || searchResult.size() == 0 ? 0 : (int) searchResult.size());
+//        page.setRows(searchResult == null || searchResult.size() == 0 ? 0 : (int) searchResult.size());
+        page.setRows(rows);
 
         return "/site/search";
     }

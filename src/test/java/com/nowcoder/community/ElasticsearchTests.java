@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.nowcoder.community.dao.DiscussPostMapper;
 import com.nowcoder.community.dao.elasticsearch.DiscussPostRepository;
 import com.nowcoder.community.entity.DiscussPost;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -109,6 +110,7 @@ public class ElasticsearchTests {
 
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
 
         System.out.println(JSONObject.toJSON(searchResponse));
 

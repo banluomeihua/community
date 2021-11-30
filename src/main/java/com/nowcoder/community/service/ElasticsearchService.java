@@ -3,6 +3,7 @@ package com.nowcoder.community.service;
 import com.alibaba.fastjson.JSONObject;
 import com.nowcoder.community.dao.elasticsearch.DiscussPostRepository;
 import com.nowcoder.community.entity.DiscussPost;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -15,7 +16,6 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -39,7 +39,8 @@ public class ElasticsearchService {
         discussRepository.deleteById(id);
     }
 
-    public List<DiscussPost> searchDiscussPost(String keyword, int offset, int limit) throws IOException {//offset是当前页的起始行，offset从0开始
+    public List<DiscussPost> searchDiscussPost(String keyword, int offset, int limit) throws IOException {
+        //offset是当前页的起始行，offset从0开始
         //discusspost是索引名，就是表名
         SearchRequest searchRequest = new SearchRequest("discusspost");
 
@@ -64,6 +65,8 @@ public class ElasticsearchService {
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
 
+        TotalHits totalHits = searchResponse.getHits().getTotalHits();
+
         List<DiscussPost> list = new LinkedList<>();
         for (SearchHit hit : searchResponse.getHits().getHits()) {
             DiscussPost discussPost = JSONObject.parseObject(hit.getSourceAsString(), DiscussPost.class);
@@ -80,6 +83,39 @@ public class ElasticsearchService {
             list.add(discussPost);
         }
         return list;
+    }
+
+    public long getTotalHits(String keyword, int offset, int limit) throws IOException {
+        //offset是当前页的起始行，offset从0开始
+        //discusspost是索引名，就是表名
+        SearchRequest searchRequest = new SearchRequest("discusspost");
+
+        //高亮
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("title");
+        highlightBuilder.field("content");
+        highlightBuilder.requireFieldMatch(false);
+        highlightBuilder.preTags("<em>");
+        highlightBuilder.postTags("</em>");
+
+        //构建搜索条件
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+                .query(QueryBuilders.multiMatchQuery(keyword, "title", "content"))
+                .sort(SortBuilders.fieldSort("type").order(SortOrder.DESC))
+                .sort(SortBuilders.fieldSort("score").order(SortOrder.DESC))
+                .sort(SortBuilders.fieldSort("createTime").order(SortOrder.DESC))
+                .from(offset)// 指定从哪条开始查询
+                .size(limit)// 需要查出的总记录条数
+                .highlighter(highlightBuilder);//高亮
+
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+        // 数据的总数(用于计算总页数)
+        long value = searchResponse.getHits().getTotalHits().value;
+
+        return value;
+
     }
 
 }
