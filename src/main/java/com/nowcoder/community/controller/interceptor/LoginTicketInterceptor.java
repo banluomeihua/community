@@ -8,6 +8,7 @@ import com.nowcoder.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,7 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 从cookie中获取凭证
         String ticket = CookieUtil.getValue(request, "ticket");
+        SecurityContext securityContext = SecurityContextHolder.getContext();
 
         if (ticket != null) {
             // 查询凭证
@@ -42,10 +44,8 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 User user = userService.findUserById(loginTicket.getUserId());
                 // 在本次请求中持有用户
                 hostHolder.setUser(user);
+                //System.out.println(hostHolder);//可以得出，一个账号进不同页面，是同一对象。不同账号进多个页面，还是同一hostHolder对象
                 // 构建用户验证的结果，并存入SecurityContext，以便于Security进行授权
-                Object principal;
-                Object credentials;
-                Collection authorities;
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
                         user,user.getPassword(), userService.getAuthorities(user.getId()));
                 SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
@@ -65,6 +65,13 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         hostHolder.clear();
-        SecurityContextHolder.clearContext();
+        /*
+        异步请求出错
+        此处有点问题，登录之后处理操作一次之后，会让其再次登录。
+        或者登录之后进入详情页面进行操作就会让其再次登录。
+        先将其注释。
+        LoginController类的logout()方法中才有这句话。
+         */
+        //SecurityContextHolder.clearContext();
     }
 }
